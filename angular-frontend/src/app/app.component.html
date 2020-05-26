@@ -1,0 +1,7 @@
+<h1>Hello World!</h1>
+
+<form (ngSubmit)="onSubmit()" #f="ngForm">
+  <input type="text" ngModel name="word" #question="ngModel">
+  <button type="submit" [disabled]="!f.valid">Send!</button>
+</form>
+<p *ngIf="vector != ''">{{ vector }}</p>
