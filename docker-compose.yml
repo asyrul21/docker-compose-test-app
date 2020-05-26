@@ -1,17 +1,21 @@
-version: '3.2'
+version: '3.3'
 
 services:
   spacy-vector-api:
     build: ./spacy-vector-api
     volumes: 
-      - './spacy-vector-api:/usr/src/app'
+      - type: bind
+        source: ./spacy-vector-api
+        target: /usr/src/spacyapi
     ports:
       - 5001:80
 
   express-backend:
     build: ./express-backend
     volumes: 
-      - './express-backend:/usr/src/app'
+      - type: bind
+        source: ./express-backend
+        target: /usr/src/express-backend
     ports:
       - 5000:3000
     depends_on:

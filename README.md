@@ -20,7 +20,7 @@ if __name__ == '__main__':
 FROM python:3
 
 # specify workinf directory
-# WORKDIR WORKDIR /usr/src/spacyapi
+WORKDIR /usr/src/spacyapi
 
 #copy all code to dir in container
 COPY . .
@@ -81,16 +81,18 @@ FROM node:14
 COPY . .
 
 # copy package.json and package-lock.json
-COPY package*.json ./
+COPY package.json .
+COPY package-lock.json .
 
 # install dependencies
 RUN npm install
+RUN npm install -g nodemon
 
 # expose container to port
-EXPOSE 8080
+EXPOSE 3000
 
 # run command
-CMD [ "node", "server.js" ]
+CMD [ "nodemon", "server.js" ]
 ```
 
 3. Create .Dockerignore file
@@ -124,7 +126,7 @@ NOTE: this wont work because each container is independent on each other
 ## The Docker Compose file
 1. Create docker-compose.yml
 ```yml
-version: '3.2'
+version: '3.3'
 
 services:
   spacy-vector-api:
@@ -132,7 +134,9 @@ services:
     build: ./spacy-vector-api
     # binding to volume
     volumes: 
-      - './spacy-vector-api:/usr/src/app'
+      - type: bind
+        source: ./spacy-vector-api
+        target: /usr/src/spacyapi
     # port mapping
     ports:
       - 5001:80
@@ -142,7 +146,9 @@ services:
     build: ./express-backend
     # binding to volume
     volumes: 
-      - './express-backend:/usr/src/app'
+      - type: bind
+        source: ./express-backend
+        target: /usr/src/express-backend
     # port mapping
     ports:
       - 5000:3000
