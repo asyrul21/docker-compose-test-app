@@ -27,7 +27,7 @@ export class AppComponent {
     var word = this.inputForm.value.word
 
     this.gvs.getVector(word).subscribe(data => {
-      console.log(data);
+      // console.log(data);
       this.vector = data.vector
     })
   }

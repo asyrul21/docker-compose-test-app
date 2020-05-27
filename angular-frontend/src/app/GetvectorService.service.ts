@@ -8,13 +8,14 @@ import { Observable } from 'rxjs';
 @Injectable()
 export class GetvectorService {
     constructor(private http: HttpClient) {
-        console.log('Vector service initialised...');
+        console.log('Vector service initialised Updated...');
     }
 
     // http://express-backend/vectorfor/?word=
     getVector(word: string): Observable<any> {
         var res = this.http.get('http://localhost:5000/vectorfor/?word=' + word);
-        console.log(res);
+        // var res = this.http.get('http://express-backend/vectorfor/?word=' + word);
+        // console.log(res);
         return res
     }
 }

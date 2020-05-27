@@ -120,7 +120,7 @@ docker ps
 5. API Call:
 localhost:49160/vectorfor/?word=hello
 
-NOTE: this wont work because each container is independent on each other
+NOTE: this wont work because each container is independent on each other, hence API call from express to localhost:56733/GetVector/?sentence=hello is not  possible. We need to use Docker Compose.
 
 
 ## The Docker Compose file
@@ -164,6 +164,157 @@ docker-compose up -d --force-recreate
 docker-compose up --build --force-recreate
 ```
 
+## The Angular Client
+
+1. Create Angular app using cli
+```bash
+ng new angular-frontend
+```
+
+2. Make sure to delelete git repo within angular app
+```bash
+rm -rf .git
+```
+
+3. Test Api call to Express docker container with (after docker-composing both the spacy api and express apps)
+http://localhost:5000/vectorfor/?word=hello
+
+4. Create server.js in root and change package.json start script
+- server.js
+```javascript
+var express = require('express')
+
+app = express()
+
+app.use(express.static('./dist/angular-frontend'));
+
+app.get('/*', function (req, res) {
+    res.sendFile('index.html', { root: 'dist/angular-frontend/' }
+    );
+});
+
+app.listen(process.env.PORT || 4200, function () {
+    console.log('Angular server is listening...');
+});
+```
+
+- package.json
+```json
+//"start": "ng serve"
+"start": "nodemon server.js"
+
+OR
+
+"start": "ng serve --host 0.0.0.0",
+```
+
+5. Build to production
+```bash
+ng build --prod
+```
+
+6. Test once again with api call to http://localhost:5000/vectorfor/?word=hello but using
+```bash
+nodemon server.js
+```
+
+7. Create the Dockerfile
+```Dockerfile
+# get node image
+FROM node:14
+# change to work directory
+WORKDIR /usr/src/angular-frontend
+# copy source code in
+COPY . .
+# copy package.json files
+COPY package.json .
+COPY package-lock.json .
+# install dependencies
+RUN npm install
+RUN npm install -g nodemon
+# expose port
+EXPOSE 4200
+# start script
+CMD [ "npm", "start" ]
+```
+
+8. Create Dockerignore file
+```dockerignore
+node_modules
+npm-debug.log
+```
+
+9. Check to see docker works with app, although the API call wont work just yet.
+```bash
+# build docker image
+docker build -t "angular.frontend" .
+
+# view all images
+docker images
+
+# run image as container
+docker run -d -p 4200:4200 --name="angular.frontend" "angular.frontend"
+
+# view all running containers
+docker ps
+
+# deletes uneeded images
+docker system prune
+```
+
+10. Now we can update the docker-compose.yml
+```yml
+version: '3.3'
+
+services:
+  spacy-vector-api:
+    build: ./spacy-vector-api
+    volumes: 
+      - type: bind
+        source: ./spacy-vector-api
+        target: /usr/src/spacyapi
+    ports:
+      - 5001:80
+
+  express-backend:
+    build: ./express-backend
+    volumes: 
+      - type: bind
+        source: ./express-backend
+        target: /usr/src/express-backend
+    ports:
+      - 5000:3000
+    depends_on:
+      - spacy-vector-api
+
+    express-backend:
+      build: ./angular-frontend
+      volumes: 
+        - type: bind
+          source: ./angular-frontend
+          target: /usr/src/angular-frontend
+      ports:
+        - 4200:4200
+      depends_on:
+        - spacy-vector-api
+        - express-backend
+```
+
+11. Api call to express backend can be made by using its host port:
+```javascript
+var res = this.http.get('http://localhost:5000/vectorfor/?word=' + word);
+```
+
+12. The run docker compose up
+```bash
+docker system prune
+
+# run in background (detached mode)
+docker-compose up -d
+
+docker-compose up --build
+```
+
 
 ## References
 
@@ -180,3 +331,9 @@ https://docs.microsoft.com/en-us/dotnet/architecture/microservices/multi-contain
 https://stackoverflow.com/questions/18497688/run-a-docker-image-as-a-container
 
 https://stackoverflow.com/questions/30323224/deploying-a-minimal-flask-app-in-docker-server-connection-issues
+
+https://scotch.io/tutorials/create-a-mean-app-with-angular-2-and-docker-compose
+
+https://stackoverflow.com/questions/52773088/how-can-i-run-angular-using-docker-compose
+
+https://docs.docker.com/config/containers/resource_constraints/
