@@ -1,6 +1,6 @@
 Flask==1.1.2
 Flask-RESTful==0.3.8
 gunicorn==20.0.4
-numpy==1.18.4
+numpy==1.22.0
 spacy>=2.2.2,<3.0.0
 https://github.com/explosion/spacy-models/releases/download/en_core_web_md-2.2.5/en_core_web_md-2.2.5.tar.gz#egg=en_core_web_md
